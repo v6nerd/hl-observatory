@@ -2,7 +2,6 @@ import os
 import sys
 import math
 import time
-import numpy
 import base64
 import random
 import logging

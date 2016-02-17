@@ -2,14 +2,19 @@ import os
 import sys
 import math
 import time
+import atexit
 import base64
 import random
+import signal
 import logging
 import argparse
 import logging.handlers
 
 from https import ssl_observatory
+from daemonize import Daemonize
 
+run = True
+pid = '/tmp/observatory.pid'
 log = logging.getLogger("Observatory")
 
 def setup_logging(debug):
@@ -25,27 +30,38 @@ def setup_logging(debug):
 
     syslog = logging.handlers.SysLogHandler(address='/dev/log')
     syslog.setLevel(logging.WARN)
+    syslog.setFormatter(formatter)
     log.addHandler(syslog)
     log.addHandler(ch)
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Hacking Labs Observatory')
     parser.add_argument('-d', action='store_true', dest='debug',default=False, help='Enable debug logging')
+    parser.add_argument('-f', action='store_true', dest='foreground',default=False, help='Keep application in foreground')
     return parser.parse_args()
 
+def exit_handler():
+    global run
+
+    run = False
+    log.debug("Application exiting")
 
 def main():
 
-    args = setup_arguments()
-    setup_logging(args.debug)
-
     log.info("Hacking Labs Observatory started")
+    atexit.register(exit_handler)
 
-    ssl_observatory.start()
-
+    while run:
+        ssl_observatory.start()
 
     log.info("Observatory ended")
 
 if __name__ == "__main__":
-    main()
+
+    global daemon
+    args = setup_arguments()
+    setup_logging(args.debug)
+
+    daemon = Daemonize(app="Hacking Labs Observatory", pid=pid, action=main, logger=log,foreground=args.foreground)
+    daemon.start()
 

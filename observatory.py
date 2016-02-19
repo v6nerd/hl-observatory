@@ -1,4 +1,5 @@
 import os
+import api
 import sys
 import math
 import time
@@ -13,7 +14,6 @@ import logging.handlers
 from https import ssl_observatory
 from daemonize import Daemonize
 
-run = True
 pid = '/tmp/observatory.pid'
 log = logging.getLogger("Observatory")
 
@@ -51,17 +51,14 @@ def main():
     log.info("Hacking Labs Observatory started")
     atexit.register(exit_handler)
 
-    while run:
-        ssl_observatory.start()
+    api.start_server(args.debug)
 
     log.info("Observatory ended")
 
 if __name__ == "__main__":
 
-    global daemon
+    global args
     args = setup_arguments()
     setup_logging(args.debug)
 
-    daemon = Daemonize(app="Hacking Labs Observatory", pid=pid, action=main, logger=log,foreground=args.foreground)
-    daemon.start()
-
+    main()

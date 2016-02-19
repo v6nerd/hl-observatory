@@ -38,9 +38,10 @@ def run():
         for line in lines:
             analyse_host(line.strip())
 
-def analyse_host(domain):
+def analyse_ssl(domain):
+    result = dict()
     dst = "https://{0}".format(domain)
-    log.debug("SSL analyze %s", dst)
+    log.debug("SSL Analyze %s", dst)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ssl_socket = context.wrap_socket(s, server_hostname=domain)
@@ -53,12 +54,33 @@ def analyse_host(domain):
         sha1sum = hashlib.sha1(bin_cert).hexdigest()
         sha256sum = hashlib.sha256(bin_cert).hexdigest()
 
-        log.info("[%s] Fingerprint (SHA1): %s", domain, sha1sum)
-        log.info("[%s] Fingerprint (SHA256): %s", domain, sha256sum)
-        log.info("[%s] Ciphers: %s", domain, ciphers)
+        result['sha1'] = sha1sum
+        result['sha256'] = sha256sum
+        result['ciphers'] = ciphers
+
+        log.debug("[%s] Cert: %s", domain, cert['subject'])
+        log.debug("[%s] Fingerprint (SHA1): %s", domain, sha1sum)
+        log.debug("[%s] Fingerprint (SHA256): %s", domain, sha256sum)
+        log.debug("[%s] Ciphers: %s", domain, ciphers)
+
+        return result
     except Exception as e:
         log.warning("Error connecting [%s] %s", dst, e)
 
+def analyse_dns(domain):
+    log.debug("DNS Analyze %s", domain)
+
+    # Get DNS info and retrieve IPv4/IPv6 addresses
+    dns = socket.getaddrinfo(domain, 443)
+    results = [record[4][0] for record in dns]
+
+    return list(set(results)) # Some records are the same, set removes duplicated, return to list to make iterable
+
+def verify_domain(domain):
+    result = dict()
+    result['ssl'] = analyse_ssl(domain)
+    result['dns'] = analyse_dns(domain)
+    return result
 
 def tls_server_callback(socket, dst, context):
     log.debug("TLS connecting to %s",dst)

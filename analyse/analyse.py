@@ -38,7 +38,7 @@ def run():
         for line in lines:
             analyse_host(line.strip())
 
-def analyse_ssl(domain):
+def ssl(domain):
     result = dict()
     dst = "https://{0}".format(domain)
     log.debug("SSL Analyze %s", dst)
@@ -67,7 +67,7 @@ def analyse_ssl(domain):
     except Exception as e:
         log.warning("Error connecting [%s] %s", dst, e)
 
-def analyse_dns(domain):
+def dns(domain):
     log.debug("DNS Analyze %s", domain)
 
     # Get DNS info and retrieve IPv4/IPv6 addresses
@@ -76,10 +76,10 @@ def analyse_dns(domain):
 
     return list(set(results)) # Some records are the same, set removes duplicated, return to list to make iterable
 
-def verify_domain(domain):
+def domain(domain):
     result = dict()
-    result['ssl'] = analyse_ssl(domain)
-    result['dns'] = analyse_dns(domain)
+    result['ssl'] = ssl(domain)
+    result['dns'] = dns(domain)
     return result
 
 def tls_server_callback(socket, dst, context):

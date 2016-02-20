@@ -11,7 +11,6 @@ import logging
 import argparse
 import logging.handlers
 
-from https import ssl_observatory
 from daemonize import Daemonize
 
 pid = '/tmp/observatory.pid'

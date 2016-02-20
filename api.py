@@ -1,6 +1,6 @@
 import re
 
-from https import ssl_observatory
+from analyse import analyse
 from flask import Flask, jsonify, request, abort
 
 app = Flask('observatory')
@@ -12,7 +12,7 @@ def GET():
     if not re.match(re_domain, domain):
         abort(400)
 
-    result = ssl_observatory.verify_domain(domain)
+    result = analyse.domain(domain)
 
     return jsonify(result)
 

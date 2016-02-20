@@ -4,8 +4,7 @@
 
 Run the following commond line:
 
-`pip3 install flask`
-`pip3 install daemonize` 
+`pip3 install flask daemonize` 
 
 ## Usage ##
 

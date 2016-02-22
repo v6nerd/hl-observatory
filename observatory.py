@@ -11,7 +11,7 @@ import logging
 import argparse
 import logging.handlers
 
-from daemonize import Daemonize
+from analyse import analyse
 
 pid = '/tmp/observatory.pid'
 log = logging.getLogger("Observatory")
@@ -37,21 +37,19 @@ def setup_arguments():
     parser = argparse.ArgumentParser(description='Hacking Labs Observatory')
     parser.add_argument('-d', action='store_true', dest='debug',default=False, help='Enable debug logging')
     parser.add_argument('-f', action='store_true', dest='foreground',default=False, help='Keep application in foreground')
+    parser.add_argument('-n', action='store', type=str, required=True, dest='name',default=False, help='Set unique name for this instance of hl observatory')
     return parser.parse_args()
 
 def exit_handler():
-    global run
-
-    run = False
-    log.debug("Application exiting")
+    pass
 
 def main():
 
     log.info("Hacking Labs Observatory started")
     atexit.register(exit_handler)
 
-    api.start_server(args.debug)
-
+    thread = analyse.start(args.name)
+    thread.join()
     log.info("Observatory ended")
 
 if __name__ == "__main__":

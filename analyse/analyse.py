@@ -1,6 +1,8 @@
+import json
 import hashlib
 import ssl, socket
 import logging
+
 from threading import Thread
 
 """
@@ -23,22 +25,31 @@ context.verify_mode = ssl.CERT_OPTIONAL
 context.check_hostname = True
 context.load_default_certs()
 
-def start():
+def start(name):
     log.info("SSL observatory started")
     log.debug("Starting SSL thread")
-    t = Thread(None, run, None, ())
+    t = Thread(None, run, None, (name,))
     t.start()
+    return t
 
 def stop():
     pass
 
-def run():
-    with open('https/targets.lst','r') as f:
+def run(name):
+    results = dict()
+
+    with open('targets.lst','r') as f:
+
         lines = f.readlines()
         for line in lines:
-            analyse_host(line.strip())
 
-def ssl(domain):
+            dst = line.strip()
+            results[dst] = analyse_domain(dst)
+
+    json_io = json.dumps(results)
+    log.info("[Results] %s",json_io)
+
+def analyse_ssl(domain):
     result = dict()
     dst = "https://{0}".format(domain)
     log.debug("SSL Analyze %s", dst)
@@ -67,7 +78,7 @@ def ssl(domain):
     except Exception as e:
         log.warning("Error connecting [%s] %s", dst, e)
 
-def dns(domain):
+def analyse_dns(domain):
     log.debug("DNS Analyze %s", domain)
 
     # Get DNS info and retrieve IPv4/IPv6 addresses
@@ -76,10 +87,10 @@ def dns(domain):
 
     return list(set(results)) # Some records are the same, set removes duplicated, return to list to make iterable
 
-def domain(domain):
+def analyse_domain(domain):
     result = dict()
-    result['ssl'] = ssl(domain)
-    result['dns'] = dns(domain)
+    result['ssl'] = analyse_ssl(domain)
+    result['dns'] = analyse_dns(domain)
     return result
 
 def tls_server_callback(socket, dst, context):

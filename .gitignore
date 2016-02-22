@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Disable results
+results/
+
 # Distribution / packaging
 .Python
 env/

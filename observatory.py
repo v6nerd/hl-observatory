@@ -1,17 +1,21 @@
 import os
 import api
 import sys
+import json
 import math
 import time
 import atexit
 import base64
 import random
 import signal
+import hashlib
 import logging
 import argparse
+import datetime
 import logging.handlers
 
 from analyse import analyse
+from threading import Thread
 
 pid = '/tmp/observatory.pid'
 log = logging.getLogger("Observatory")
@@ -43,12 +47,40 @@ def setup_arguments():
 def exit_handler():
     pass
 
+def start():
+    log.debug("Starting analyse thread")
+    t = Thread(None, run, None, (args.name,))
+    t.start()
+    return t
+
+def run(name):
+    results = dict()
+
+    with open('targets.lst','r') as f:
+
+        lines = f.readlines()
+        for line in lines:
+            dst = line.strip()
+            results[dst] = analyse.analyse_domain(dst)
+
+    json_io = json.dumps(results,separators=(',', ':')) #remove whitespaces
+    log.info("[Results] %s",json_io)
+
+    now = datetime.datetime.now()
+    str_now = now.strftime("%H%M_%d%m%y")
+    file_name = "{0}_{1}.json".format(name,str_now)
+
+    with open('results/'+file_name,'w') as f:
+        f.write(json_io)
+
+    log.info("Written results to file: %s",file_name)
+
 def main():
 
     log.info("Hacking Labs Observatory started")
     atexit.register(exit_handler)
 
-    thread = analyse.start(args.name)
+    thread = start()
     thread.join()
     log.info("Observatory ended")
 

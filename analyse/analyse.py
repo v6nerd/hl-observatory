@@ -1,4 +1,3 @@
-import json
 import hashlib
 import ssl, socket
 import logging
@@ -24,30 +23,6 @@ context = ssl.SSLContext(ssl.PROTOCOL_SSLv23) # No support for SSLv2
 context.verify_mode = ssl.CERT_OPTIONAL
 context.check_hostname = True
 context.load_default_certs()
-
-def start(name):
-    log.info("SSL observatory started")
-    log.debug("Starting SSL thread")
-    t = Thread(None, run, None, (name,))
-    t.start()
-    return t
-
-def stop():
-    pass
-
-def run(name):
-    results = dict()
-
-    with open('targets.lst','r') as f:
-
-        lines = f.readlines()
-        for line in lines:
-
-            dst = line.strip()
-            results[dst] = analyse_domain(dst)
-
-    json_io = json.dumps(results)
-    log.info("[Results] %s",json_io)
 
 def analyse_ssl(domain):
     result = dict()

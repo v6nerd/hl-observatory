@@ -46,6 +46,7 @@ def setup_arguments():
     parser.add_argument('-d', action='store_true', dest='debug',default=False, help='Enable debug logging')
     parser.add_argument('-f', action='store_true', dest='foreground',default=False, help='Keep application in foreground')
     parser.add_argument('-n', action='store', type=str, required=True, dest='name',default=False, help='Set unique name for this instance of hl observatory')
+    parser.add_argument('-i', action='store', type=str, required=True, dest='filename',default=False,help='specify domain target list')	
     return parser.parse_args()
 
 def exit_handler():
@@ -71,7 +72,7 @@ def write_to_file(location, data, mode='w'):
 def run(name):
     results = dict()
 
-    with open('targets.lst','r') as f:
+    with open(args.filename,'r') as f:
 
         lines = f.readlines()
         for line in lines:

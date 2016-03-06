@@ -46,7 +46,7 @@ def setup_arguments():
     parser.add_argument('-d', action='store_true', dest='debug',default=False, help='Enable debug logging')
     parser.add_argument('-f', action='store_true', dest='foreground',default=False, help='Keep application in foreground')
     parser.add_argument('-n', action='store', type=str, required=True, dest='name',default=False, help='Set unique name for this instance of hl observatory')
-    parser.add_argument('-i', action='store', type=str, required=True, dest='filename',default=False,help='specify domain target list')	
+    parser.add_argument('-t', action='store', type=str, required=True, dest='filename',default=False,help='Domain target list')	
     return parser.parse_args()
 
 def exit_handler():

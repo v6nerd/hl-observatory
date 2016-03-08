@@ -53,11 +53,6 @@ def setup_arguments():
 def exit_handler():
     pass
 
-def start():
-    log.debug("Starting analyse thread")
-    t.start()
-    return t
-
 def read_pub_key():
     with open('pubkey.pem','rb') as f:
         keydata = f.read()
@@ -73,21 +68,22 @@ def write_results(results):
 
     json_io = json.dumps(results, separators=(',', ':'), sort_keys=True) #remove whitespaces
     sha256sum = hashlib.sha256(json_io.encode('utf-8')).hexdigest()
-    log.info("Results: [%s] %s",sha256sum,json_io)
 
     now = datetime.datetime.now()
     str_now = now.strftime("%H%M%d%m%y")
-    file_name = "{0}_{1}.json".format(name,str_now)
+    file_name = "{0}_{1}.json".format(args.name,str_now)
 
     # Write results
-    loc = 'results/{0}'.format(file_name)
-    write_to_file(loc, json_io)
+    loc_json = 'results/{0}'.format(file_name)
+    write_to_file(loc_json, json_io)
 
     # Write encrypted signature
-    loc = 'results/{0}.asc'.format(file_name)
+    loc_asc = 'results/{0}.asc'.format(file_name)
     pubkey = read_pub_key()
     enc_sign = rsa.encrypt(sha256sum.encode('utf-8'), pubkey)
-    write_to_file(loc, enc_sign,'wb')
+    write_to_file(loc_asc, enc_sign,'wb')
+
+    log.info('Results: %s [%s]', loc_json, sha256sum)
 
 def main():
 
@@ -115,7 +111,7 @@ def main():
     # Wait for every thread to finish
     domain_queue.join()
 
-    while result_queue.full():
+    while not result_queue.empty():
         (dst, result) = result_queue.get()
         results[dst] = result
         result_queue.task_done()

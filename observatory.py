@@ -72,11 +72,11 @@ def run(name):
     results = dict()
 
     with open(args.filename,'r') as f:
-
         lines = f.readlines()
-        for line in lines:
-            dst = line.strip()
-            results[dst] = analyse.analyse_domain(dst)
+
+    for line in lines:
+        dst = line.strip()
+        results[dst] = analyse.analyse_domain(dst)
 
     json_io = json.dumps(results, separators=(',', ':'), sort_keys=True) #remove whitespaces
     sha256sum = hashlib.sha256(json_io.encode('utf-8')).hexdigest()

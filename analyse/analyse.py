@@ -28,30 +28,28 @@ def analyse_ssl(domain):
     result = dict()
     dst = "https://{0}".format(domain)
     log.debug("SSL Analyze %s", dst)
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ssl_socket = context.wrap_socket(s, server_hostname=domain)
-        ssl_socket.connect((domain, 443))
 
-        cert = ssl_socket.getpeercert(False)
-        bin_cert = ssl_socket.getpeercert(True)
-        ciphers = ssl_socket.cipher()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ssl_socket = context.wrap_socket(s, server_hostname=domain)
+    ssl_socket.connect((domain, 443))
 
-        sha1sum = hashlib.sha1(bin_cert).hexdigest()
-        sha256sum = hashlib.sha256(bin_cert).hexdigest()
+    cert = ssl_socket.getpeercert(False)
+    bin_cert = ssl_socket.getpeercert(True)
+    ciphers = ssl_socket.cipher()
 
-        result['sha1'] = sha1sum
-        result['sha256'] = sha256sum
-        result['ciphers'] = ciphers
+    sha1sum = hashlib.sha1(bin_cert).hexdigest()
+    sha256sum = hashlib.sha256(bin_cert).hexdigest()
 
-        log.debug("[%s] Cert: %s", domain, cert['subject'])
-        log.debug("[%s] Fingerprint (SHA1): %s", domain, sha1sum)
-        log.debug("[%s] Fingerprint (SHA256): %s", domain, sha256sum)
-        log.debug("[%s] Ciphers: %s", domain, ciphers)
+    result['sha1'] = sha1sum
+    result['sha256'] = sha256sum
+    result['ciphers'] = ciphers
 
-        return result
-    except Exception as e:
-        log.warning("Error connecting [%s] %s", dst, e)
+    log.debug("[%s] Cert: %s", domain, cert['subject'])
+    log.debug("[%s] Fingerprint (SHA1): %s", domain, sha1sum)
+    log.debug("[%s] Fingerprint (SHA256): %s", domain, sha256sum)
+    log.debug("[%s] Ciphers: %s", domain, ciphers)
+
+    return result
 
 def analyse_dns(domain):
     log.debug("DNS Analyze %s", domain)
@@ -59,13 +57,22 @@ def analyse_dns(domain):
     # Get DNS info and retrieve IPv4/IPv6 addresses
     dns = socket.getaddrinfo(domain, 443)
     results = [record[4][0] for record in dns]
+    results = list(set(results)) # Some records are the same, set removes duplicated, return to list to make iterable
 
-    return list(set(results)) # Some records are the same, set removes duplicated, return to list to make iterable
+    if len(results) == 0:
+        raise Exception('No DNS resolving')
+
+    return results
 
 def analyse_domain(domain):
     result = dict()
-    result['ssl'] = analyse_ssl(domain)
-    result['dns'] = analyse_dns(domain)
+    try:
+        result['ssl'] = analyse_ssl(domain)
+        result['dns'] = analyse_dns(domain)
+    except Exception as e:
+        message = str(e)
+        log.error('[%s] %s', domain, message)
+        result['error'] = message
     return result
 
 def tls_server_callback(socket, dst, context):

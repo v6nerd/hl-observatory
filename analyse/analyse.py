@@ -99,7 +99,7 @@ def verify_redirect(dst):
     elif r.status_code == 200:
         return (False, '')
     else:
-        raise Exception('Unknown status code returned: '+r.status_code)
+        raise Exception('Unknown status code returned: '+str(r.status_code))
 
 def tls_server_callback(socket, dst, context):
     log.debug("TLS connecting to %s",dst)

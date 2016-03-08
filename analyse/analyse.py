@@ -1,4 +1,5 @@
 import hashlib
+import requests
 import ssl, socket
 import logging
 
@@ -27,6 +28,11 @@ context.load_default_certs()
 def analyse_ssl(domain):
     result = dict()
     dst = "https://{0}".format(domain)
+
+    # Verify if URL redirects, if so, use redirect
+    (redirect, new_dst) = verify_redirect(dst)
+    dst = new_dst if redirect else dst
+
     log.debug("SSL Analyze %s", dst)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,13 +73,30 @@ def analyse_dns(domain):
 def analyse_domain(domain):
     result = dict()
     try:
-        result['ssl'] = analyse_ssl(domain)
         result['dns'] = analyse_dns(domain)
+        result['ssl'] = analyse_ssl(domain)
     except Exception as e:
         message = str(e)
         log.error('[%s] %s', domain, message)
         result['error'] = message
     return result
+
+def verify_redirect(dst):
+    #Todo: set correct user-agent
+    r = requests.get(dst)
+
+    if r.status_code == 301:
+        new_dst = r.headers['Location']
+        log.warning('[%s] Redirection to: %s', dst, new_dst)
+
+        if not new_dst.startswith('https'):
+            raise Exception('Redirected to HTTP connection: '+new_dst)
+
+        return (True, new_dst)
+    elif r.status_code == 200:
+        return (False, '')
+    else:
+        raise Exception('Unknown status code returned: '+r.status_code)
 
 def tls_server_callback(socket, dst, context):
     log.debug("TLS connecting to %s",dst)

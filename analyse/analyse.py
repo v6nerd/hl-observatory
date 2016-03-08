@@ -25,6 +25,9 @@ context.verify_mode = ssl.CERT_OPTIONAL
 context.check_hostname = True
 context.load_default_certs()
 
+# Socket timeout in seconds
+socket.setdefaulttimeout(30)
+
 def analyse_ssl(domain):
     result = dict()
     dst = "https://{0}".format(domain)

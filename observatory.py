@@ -1,6 +1,5 @@
 import os
 import rsa
-import api
 import sys
 import json
 import math
@@ -31,12 +30,12 @@ def setup_logging(debug):
     else:
         log.setLevel(logging.INFO)
         ch.setLevel(logging.INFO)
+    log.addHandler(ch)
 try:
     syslog = logging.handlers.SysLogHandler(address='/dev/log')
     syslog.setLevel(logging.WARN)
     syslog.setFormatter(formatter)
     log.addHandler(syslog)
-    log.addHandler(ch)
 
 except:
 	pass

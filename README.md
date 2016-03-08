@@ -4,17 +4,21 @@
 
 Run the following commond line:
 
-`pip3 install flask rsa` 
+`pip3 install flask rsa requests`
 
 ## Usage ##
 
 Run the following:
 
-`python3 observatory.py`
+`python3 observatory.py -t target.lst -n 'instance_name'`
 
 This will run the application and analyse all domains listed in target. The results will be placed in the results directory. 
 
 Each result file will also contain a referenced `.asc` file that contains the encrypted hash256sum of the result. 
+
+The application requires two variables:
+  1. The location of the file which contains the domain names
+  2. The instance names of the application, to identify applications in different countries
 
 ## Result ##
 
@@ -60,3 +64,15 @@ In order to minimise storage, all whitespaces have been removed. To make it more
         }
     },
 ```
+
+## Verification ##
+
+The `verification.py` application is used to verify the signatures of the received results. You can use accordingly:
+
+`python3 verification.py -t 'location of data_dir' -p 'location of private_key'`
+
+It requires two variables:
+  1. The location of the directory containing all the .json & .json.asc files
+  2. The location of the private key which is used to decrypt the signatures
+
+The application will show in the results how many signatures are valid and which are not valid. Use this application to ensure that the data has not be altered. 

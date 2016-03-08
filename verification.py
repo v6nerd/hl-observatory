@@ -45,7 +45,7 @@ def read_pub_key():
 
 def main():
     error_list = list()
-    files = correct = 0
+    correct_list = list()
     log.info("Hacking Labs data verification started")
 
     if not os.path.isfile(args.private_key):
@@ -67,10 +67,8 @@ def main():
         asc = '{0}.asc'.format(json)
         if not os.path.isfile(asc):
             error = 'Signature file not found: {0}'.format(json)
-            log.error(error)
             error_list.append(error)
-        else:
-            files += 1
+            continue
 
         with open(asc, 'rb') as f:
             enc_sign = f.read()
@@ -82,13 +80,14 @@ def main():
         checksum = hashlib.sha256(data).hexdigest()
         if sign != checksum:
             error = 'Invalid signature found: {0}'.format(json)
-            log.error(error)
             error_list.append(error)
         else:
-            correct += 1
+            correct_list.append('Correct signature: '+json)
 
-    log.info("Verification ended")
-    log.info("Results: [%d] files verified, [%d] correct, [%d] errors", files, correct, len(error_list))
+    log.info("Results: [%d] files verified, [%d] correct, [%d] errors", len(data_files), len(correct_list), len(error_list))
+
+    for correct in correct_list:
+        log.debug(correct)
     
     if len(error_list) > 0:
         log.error('Following errors found:')

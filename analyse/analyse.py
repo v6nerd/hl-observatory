@@ -84,6 +84,14 @@ def analyse_domain(domain):
         result['error'] = message
     return result
 
+def run(tid, domain_queue, result_queue):
+     log.debug('Starting thread [%d]', tid)
+     while not domain_queue.empty():
+         domain = domain_queue.get()
+         result = analyse_domain(domain)
+         result_queue.put((domain,result))
+         domain_queue.task_done()
+
 def verify_redirect(dst):
     #Todo: set correct user-agent
     r = requests.get(dst)

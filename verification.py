@@ -76,7 +76,7 @@ def main():
         with open(json, 'r') as f:
             data = f.read()
 
-        sign = rsa.decrypt(enc_sign, privkey)
+        sign = rsa.decrypt(enc_sign, privkey).decode('utf-8')
         checksum = hashlib.sha256(data.encode('utf-8')).hexdigest()
         if sign != checksum:
             error = 'Invalid signature found: {0}'.format(json)

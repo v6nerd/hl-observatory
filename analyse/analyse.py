@@ -84,9 +84,9 @@ def analyse_domain(domain):
         result['error'] = message
     return result
 
-def run(tid, domain_queue, result_queue):
+def run(tid, domain_queue, result_queue, thread_stop):
      log.debug('Starting thread [%d]', tid)
-     while not domain_queue.empty():
+     while not domain_queue.empty() and not thread_stop.is_set():
          domain = domain_queue.get()
          result = analyse_domain(domain)
          result_queue.put((domain,result))

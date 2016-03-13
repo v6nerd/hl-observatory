@@ -9,13 +9,16 @@ import base64
 import random
 import signal
 import hashlib
-import logging
 import argparse
 import datetime
 import queue
+
+import logging
 import logging.handlers
 
 from analyse import analyse
+
+import threading
 from threading import Thread
 
 pid = '/tmp/observatory.pid'
@@ -51,7 +54,9 @@ def setup_arguments():
     return parser.parse_args()
 
 def exit_handler():
-    pass
+    thread_stop.set()
+    result_thread.join()
+    log.info('Cleaned up, exiting')
 
 def read_pub_key():
     with open('pubkey.pem','rb') as f:
@@ -84,11 +89,12 @@ def write_results(results, file_name):
     loc_asc = 'results/{0}.asc'.format(file_name)
     pubkey = read_pub_key()
     enc_sign = rsa.encrypt(sha256sum.encode('utf-8'), pubkey)
+    #write_to_file(loc_asc, sha256sum,'w')
     write_to_file(loc_asc, enc_sign,'wb')
 
     log.debug('Results: %s [%s]', loc_json, sha256sum)
 
-def results_run(tid, domain_queue, result_queue):
+def results_run(tid, domain_queue, result_queue, thread_stop):
 
     results = dict()
     results_name = generate_results_name()
@@ -96,7 +102,7 @@ def results_run(tid, domain_queue, result_queue):
     log.debug('Starting result thread [%d]', tid)
     # Write results when available
     # verify every 5 seconds whether threads finished
-    while not domain_queue.empty():
+    while not domain_queue.empty() and not thread_stop.is_set():
         try:
             (dst, result) = result_queue.get(True,5)
         except:
@@ -106,6 +112,10 @@ def results_run(tid, domain_queue, result_queue):
         result_queue.task_done()
         write_results(results,results_name)
 
+    # If SIGINT is thrown, write results and exit
+    if thread_stop.is_set():
+        log.info('Result thread stopped')
+        return
 
     # Wait for every thread to finish
     domain_queue.join()
@@ -123,6 +133,9 @@ def results_run(tid, domain_queue, result_queue):
 
 def main():
 
+    global thread_stop, result_thread
+
+    thread_stop= threading.Event()
     domain_queue = queue.Queue()
     result_queue = queue.Queue()
 
@@ -139,14 +152,13 @@ def main():
     # Start threads
     threads = list()
     for i in range(args.threads):
-        thread = Thread(None, analyse.run, None, (i, domain_queue, result_queue))
+        thread = Thread(None, analyse.run, None, (i, domain_queue, result_queue, thread_stop))
         threads.append(thread)
         thread.start()
 
     # Start thread which write results
-    thread = Thread(None, results_run, None, (10, domain_queue, result_queue))
-    threads.append(thread)
-    thread.start()
+    result_thread = Thread(None, results_run, None, (10, domain_queue, result_queue, thread_stop))
+    result_thread.start()
 
     log.info("Observatory ended")
 

@@ -64,14 +64,17 @@ def write_to_file(location, data, mode='w'):
         f.write(data)
     log.debug("Written to: %s",location)
 
-def write_results(results):
-
-    json_io = json.dumps(results, separators=(',', ':'), sort_keys=True) #remove whitespaces
-    sha256sum = hashlib.sha256(json_io.encode('utf-8')).hexdigest()
-
+def generate_results_name():
     now = datetime.datetime.now()
     str_now = now.strftime("%H%M%d%m%y")
     file_name = "{0}_{1}.json".format(args.name,str_now)
+    return file_name
+
+
+def write_results(results, file_name):
+
+    json_io = json.dumps(results, separators=(',', ':'), sort_keys=True) #remove whitespaces
+    sha256sum = hashlib.sha256(json_io.encode('utf-8')).hexdigest()
 
     # Write results
     loc_json = 'results/{0}'.format(file_name)
@@ -83,11 +86,43 @@ def write_results(results):
     enc_sign = rsa.encrypt(sha256sum.encode('utf-8'), pubkey)
     write_to_file(loc_asc, enc_sign,'wb')
 
-    log.info('Results: %s [%s]', loc_json, sha256sum)
+    log.debug('Results: %s [%s]', loc_json, sha256sum)
+
+def results_run(tid, domain_queue, result_queue):
+
+    results = dict()
+    results_name = generate_results_name()
+
+    log.debug('Starting result thread [%d]', tid)
+    # Write results when available
+    # verify every 5 seconds whether threads finished
+    while not domain_queue.empty():
+        try:
+            (dst, result) = result_queue.get(True,5)
+        except:
+            continue
+
+        results[dst] = result
+        result_queue.task_done()
+        write_results(results,results_name)
+
+
+    # Wait for every thread to finish
+    domain_queue.join()
+
+    # One final loop to verify that all results
+    # will be written
+    while not result_queue.empty():
+        try:
+            (dst, result) = result_queue.get()
+        except:
+            break
+        results[dst] = result
+        result_queue.task_done()
+        write_results(results)
 
 def main():
 
-    results = dict()
     domain_queue = queue.Queue()
     result_queue = queue.Queue()
 
@@ -108,15 +143,11 @@ def main():
         threads.append(thread)
         thread.start()
 
-    # Wait for every thread to finish
-    domain_queue.join()
+    # Start thread which write results
+    thread = Thread(None, results_run, None, (10, domain_queue, result_queue))
+    threads.append(thread)
+    thread.start()
 
-    while not result_queue.empty():
-        (dst, result) = result_queue.get()
-        results[dst] = result
-        result_queue.task_done()
-
-    write_results(results)
     log.info("Observatory ended")
 
 if __name__ == "__main__":

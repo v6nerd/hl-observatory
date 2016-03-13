@@ -123,7 +123,7 @@ def results_run(tid, domain_queue, result_queue, thread_stop):
     # will be written
     while not result_queue.empty():
         try:
-            (dst, result) = result_queue.get()
+            (dst, result) = result_queue.get(True, 1)
         except:
             break
         results[dst] = result

@@ -89,7 +89,6 @@ def write_results(results, file_name):
     loc_asc = 'results/{0}.asc'.format(file_name)
     pubkey = read_pub_key()
     enc_sign = rsa.encrypt(sha256sum.encode('utf-8'), pubkey)
-    #write_to_file(loc_asc, sha256sum,'w')
     write_to_file(loc_asc, enc_sign,'wb')
 
     log.debug('Results: %s [%s]', loc_json, sha256sum)
@@ -110,7 +109,7 @@ def results_run(tid, domain_queue, result_queue, thread_stop):
 
         results[dst] = result
         result_queue.task_done()
-        write_results(results,results_name)
+        write_results(results, results_name)
 
     # If SIGINT is thrown, write results and exit
     if thread_stop.is_set():
@@ -129,7 +128,7 @@ def results_run(tid, domain_queue, result_queue, thread_stop):
             break
         results[dst] = result
         result_queue.task_done()
-        write_results(results)
+        write_results(results, results_name)
 
 def main():
 

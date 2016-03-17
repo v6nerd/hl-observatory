@@ -1,9 +1,11 @@
 #HL-Observatory SETUP script over SSH - Tested (single)
-echo SETUP STARTED at  $(date +%d-%m-%y' '%H:%M:%S) >> /var/log/hl-observatory.setup
-apt-get update && apt-get install -y docker.io >> /var/log/hl-observatory.setup
-docker pull v6nerd/hl-observatory:latest && echo SETUP ENDED at $(date +%d-%m-%y' '%H:%M:%S)  >> /var/log/hl-observatory.setup
+LOGFILE="/var/log/hl-observatory.setup"
+FMTDATE=$(date +%d-%m-%y' '%H:%M:%S)
+echo SETUP STARTED at  $FMTDATE >> $LOGFILE
+apt-get update && apt-get install -y docker.io >> $LOGFILE
+docker pull v6nerd/hl-observatory:latest && echo SETUP ENDED at $FMTDATE  >> $LOGFILE
 
-#Removes existing Docker Instances
+#Removes existing Docker Instances(if any)
 docker kill default
 docker rm default
 

@@ -5,4 +5,4 @@ RUN pip3 install flask daemonize rsa requests
 RUN mkdir /var/log/hl-observatory
 RUN git clone https://github.com/rkokkelk/hl-observatory/
 WORKDIR /hl-observatory
-RUN mkdir ./results && ./hl_test.sh
+RUN mkdir ./results

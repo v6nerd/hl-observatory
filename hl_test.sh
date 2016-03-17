@@ -1,6 +1,6 @@
 #!/bin/bash
 LOGFILE="/var/log/hl-observatory.setup"
-EXECPATH="/hl-observatroy/"
+EXECPATH="/hl-observatroy"
 FMTDATE=$(date +%d-%m-%y' '%H:%M:%S)
 ./get_geoinfo.sh
 python3 observatory.py -n test_$(cat hostinfo) -t targets.lst

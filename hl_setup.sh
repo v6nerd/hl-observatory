@@ -6,8 +6,8 @@ apt-get update && apt-get install -y docker.io >> $LOGFILE
 docker pull v6nerd/hl-observatory:latest && echo SETUP ENDED at $FMTDATE  >> $LOGFILE
 
 #Removes existing Docker Instances(if any)
-docker kill default
-docker rm default
+docker kill observatory
+docker rm observatory
 
 #Run HL-Observatory Docker instance
-docker run -d -h dockerinstance --name default -i v6nerd/hl-observatory:latest
+docker run -d -h dockerinstance --name observatory -i v6nerd/hl-observatory:latest
